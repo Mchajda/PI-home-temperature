@@ -20,7 +20,7 @@ def connect_to_wifi():
     print("Connected! IP Address:", wlan.ifconfig()[0])
 
 # Send data with timestamp
-def send_data(temp, humidity, room):
+def send_data(temp, humidity):
     url = "http://192.168.138.2:5000/data"
     data = {"temperature": str(temp), "humidity": str(humidity), "room": ROOM_NAME}  # Include timestamp in data
     headers = {"Content-Type": "application/json"}
@@ -75,15 +75,16 @@ def main():
         # Check if sensor read was successful
         # LM35 sensor
         temperature = read_lm_temperature()
-        (temperature, humidity) = read_dht_sensor()
-        
+        # (temperature, humidity) = read_dht_sensor()
+
         if temperature is not None:
             send_data(temperature, 'none')
+            # send_data(temperature, humidity)
         else:
             print("Skipping data sending due to sensor read failure.")
 
-        # Put Pico W into light sleep for 1 hour (3600 seconds)
-        print("Going to light sleep for 1 hour...")
+        # Put Pico W into light sleep for 0.5 hour (1800 seconds)
+        print("Going to light sleep for 0.5 hour...")
         time.sleep(1800)
 
 main()
