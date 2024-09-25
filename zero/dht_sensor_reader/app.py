@@ -3,7 +3,7 @@ import requests
 import Adafruit_DHT
 
 # Set sensor type and GPIO pin
-DHT_SENSOR = Adafruit_DHT.DHT22  # Change to Adafruit_DHT.DHT11 if using DHT11
+DHT_SENSOR = Adafruit_DHT.DHT11  # Change to Adafruit_DHT.DHT11 if using DHT11
 DHT_PIN = 4  # GPIO pin connected to the DATA pin of the sensor
 
 # API endpoint of your existing web server
