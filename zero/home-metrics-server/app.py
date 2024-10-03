@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify
 import sqlite3
 from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.ERROR)
 
 app = Flask(__name__)
 
@@ -39,19 +43,30 @@ def receive_data():
 
     return jsonify({'status': 'success', 'message': 'Data saved'}), 200
 
-@app.route('/data', methods=['GET'])
-def return_data():
-    conn = sqlite3.connect('/app/data.db')
-    c = conn.cursor()
+@app.route('/data/<room_name>', methods=['GET'])
+def return_data(room_name):
+    if not room_name:
+        return jsonify({'status': 'error', 'message': 'Room name is required'}), 400
+    
+    try:
+        with sqlite3.connect('/app/data.db') as conn:
+            c = conn.cursor()
 
-    c.execute('SELECT * FROM metrics')
-    rows = c.fetchall()
-    columns = [description[0] for description in c.description]
-    conn.close()
+            sql = 'SELECT temperature, humidity, date FROM metrics WHERE room = ?'
+            args = (room_name,)
+            c.execute(sql, args)
+            rows = c.fetchall()
 
-    data = [dict(zip(columns, row)) for row in rows]
+            if not rows:
+                return jsonify({'status': 'success', 'data': [], 'message': 'No data found for the specified room'}), 200
 
-    return jsonify({'status': 'success', 'data': data}), 200
+            columns = [description[0] for description in c.description]
+
+            data = [dict(zip(columns, row)) for row in rows]
+            return jsonify({'status': 'success', 'data': data}), 200
+    except Exception as error:
+        logging.exception("An exception occurred")
+        return jsonify({'status': 'error', 'message': str(error)}), 500
 
 @app.route('/heartbeat', methods=['GET'])
 def heartbeat():
