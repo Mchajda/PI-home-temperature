@@ -46,9 +46,12 @@ def return_data():
 
     c.execute('SELECT * FROM metrics')
     rows = c.fetchall()
+    columns = [description[0] for description in c.description]
     conn.close()
 
-    return jsonify({'status': 'success', 'data': rows}), 200
+    data = [dict(zip(columns, row)) for row in rows]
+
+    return jsonify({'status': 'success', 'data': data}), 200
 
 @app.route('/heartbeat', methods=['GET'])
 def heartbeat():
