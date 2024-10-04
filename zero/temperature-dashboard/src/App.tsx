@@ -1,38 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Container, Card, CardContent, Typography } from "@mui/material";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import "./App.css";
 
-interface ApiResponse {
-  date: string;
-  humidity: string;
-  temperature: string;
-}
-
+// Define the interface for the API response
 interface DataProps {
   date: string;
   humidity: number;
   temperature: number;
 }
 
-function App() {
-  const [data, setData] = useState<DataProps[]>([]);
+// Function to fetch data from the API
+const fetchTemperatureData = async (): Promise<DataProps[]> => {
+  const response = await fetch("http://192.168.138.2:5000/data/outside");
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  const apiData = await response.json();
+  return apiData.data.map((item: any) => ({
+    date: new Date(item.date).toLocaleTimeString(),
+    humidity: Number(item.humidity),
+    temperature: Number(item.temperature),
+  }));
+};
 
-  useEffect(() => {
-    // Fetch data from API
-    fetch("http://192.168.138.2:5000/data/outside")
-      .then((response) => response.json())
-      .then((apiData) => {
-        // Convert API response to the format required for the chart
-        const formattedData = apiData.data.map((item: ApiResponse) => ({
-          date: new Date(item.date).toLocaleTimeString(), // Convert date to readable time
-          humidity: Number(item.humidity), // Convert humidity to number
-          temperature: Number(item.temperature), // Convert temperature to number
-        }));
-        setData(formattedData); // Update the state with formatted data
-      })
-      .catch((error) => console.error("Error fetching data:", error));
-  }, []);
+// Main App component
+function App() {
+  // Correct the useQuery definition with explicit type parameters for data and error types
+  const { data, error, isLoading } = useQuery<DataProps[], Error>({
+    queryKey: ["temperatureData"] as const,
+    queryFn: fetchTemperatureData,
+  });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
 
   return (
     <Container>
